@@ -1,26 +1,26 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Custom Body Style */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* Warna dasar kuning pastel sangat muda (yellow-50) */
+  background-color: #fefce8; 
+  color: #000000;
+}
+
+/* Pola Bintik (Dot Pattern) */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Bintik hitam kecil dengan opacity rendah */
+  background-image: radial-gradient(#000000 1px, transparent 1px); 
+  background-size: 24px 24px; /* Jarak antar titik */
+  opacity: 0.1; /* Transparansi biar gak sakit mata */
+  pointer-events: none; /* Supaya bisa diklik tembus */
+  z-index: -1;
 }
