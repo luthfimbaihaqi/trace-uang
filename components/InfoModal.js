@@ -38,7 +38,7 @@ export default function InfoModal({ isOpen, onClose, totalBudget }) {
         {/* Konten Penjelasan */}
         <div className="space-y-4 text-sm font-medium border-t-2 border-black/10 pt-4">
           <p>
-            Ini adalah <span className="font-black bg-white px-1 border border-black rounded">Patokan Garis Aman</span> kamu, sayang.
+            Ini adalah <span className="font-black bg-white px-1 border border-black rounded">Patokan Garis Aman</span> Mimi
           </p>
 
           <div className="bg-white p-3 rounded-lg border-2 border-black border-dashed">
