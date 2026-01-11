@@ -91,7 +91,7 @@ export default function CalculatorModal({ isOpen, onClose, netBudget }) {
       } else {
         setRealityCheck({
             type: 'safe',
-            text: `Ciluk ba! Bisa banget ini mah. Lanjutkannn! 🤑`
+            text: `Bisa banget ini mah. Lanjutkannn! 🤑`
         });
       }
     }
