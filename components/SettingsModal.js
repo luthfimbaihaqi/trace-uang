@@ -14,6 +14,10 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
   const [newFixedName, setNewFixedName] = useState('');
   const [newFixedAmount, setNewFixedAmount] = useState('');
 
+  // Reset confirmation
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
+
   // Sync saat modal dibuka
   useEffect(() => {
     if (isOpen) {
@@ -74,8 +78,14 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
   };
 
   const handleResetApp = () => {
-    if (confirm("Yakin mau hapus SEMUA data (History, Tagihan, Pemasukan)?")) {
+    setShowResetConfirm(true);
+    setResetConfirmText('');
+  };
+
+  const confirmReset = () => {
+    if (resetConfirmText === 'HAPUS') {
       onReset();
+      setShowResetConfirm(false);
       onClose();
     }
   };
@@ -113,9 +123,9 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
           {/* Form Tambah */}
           <div className="flex gap-2 mb-3">
             <input 
-               type="text" 
-               placeholder="Nama (ex: Gaji)" 
-               className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
+              type="text" 
+              placeholder="Nama (ex: Gaji)" 
+              className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
               value={newIncomeName}
               onChange={(e) => setNewIncomeName(e.target.value)}
             />
@@ -167,9 +177,9 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
           {/* Form Tambah */}
           <div className="flex gap-2 mb-3">
             <input 
-                  type="text" 
-                  placeholder="Nama (ex: Kost)" 
-                  className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
+              type="text" 
+              placeholder="Nama (ex: Kost)" 
+              className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
               value={newFixedName}
               onChange={(e) => setNewFixedName(e.target.value)}
             />
@@ -267,6 +277,54 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
             <LogOut size={12} /> Logout
           </button>
         </div>
+
+        {/* RESET CONFIRMATION MODAL */}
+        {showResetConfirm && (
+          <div className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="w-full max-w-xs bg-red-100 border-2 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-5 animate-in fade-in zoom-in duration-200">
+              
+              <div className="text-center mb-4">
+                <div className="w-14 h-14 bg-white border-2 border-black rounded-full flex items-center justify-center mx-auto mb-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                  <Trash2 size={28} className="text-red-600" />
+                </div>
+                <h3 className="text-lg font-black uppercase">Yakin Banget?</h3>
+                <p className="text-xs font-medium text-gray-600 mt-1">
+                  Semua data (history, tagihan, pemasukan) akan hilang selamanya dan tidak bisa dikembalikan.
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-xs font-bold mb-1 text-red-800">
+                  Ketik <span className="bg-red-200 px-1.5 py-0.5 rounded border border-red-300 font-black">HAPUS</span> untuk konfirmasi
+                </label>
+                <input
+                  type="text"
+                  value={resetConfirmText}
+                  onChange={(e) => setResetConfirmText(e.target.value.toUpperCase())}
+                  placeholder="Ketik di sini..."
+                  className="w-full p-3 rounded-lg border-2 border-black font-black text-center text-lg tracking-widest focus:outline-none focus:ring-4 focus:ring-red-200"
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowResetConfirm(false)}
+                  className="flex-1 bg-white text-black py-3 rounded-lg font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:shadow-none transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmReset}
+                  disabled={resetConfirmText !== 'HAPUS'}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-lg font-bold border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-y-[2px] active:shadow-none transition-all flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Trash2 size={16} /> RESET
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
     </div>
