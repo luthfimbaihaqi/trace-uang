@@ -113,9 +113,9 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
           {/* Form Tambah */}
           <div className="flex gap-2 mb-3">
             <input 
-              type="text" 
-              placeholder="Nama (ex: Gaji)" 
-              className="flex-1 p-2 rounded border-2 border-black text-sm font-medium"
+               type="text" 
+               placeholder="Nama (ex: Gaji)" 
+               className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
               value={newIncomeName}
               onChange={(e) => setNewIncomeName(e.target.value)}
             />
@@ -167,9 +167,9 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
           {/* Form Tambah */}
           <div className="flex gap-2 mb-3">
             <input 
-              type="text" 
-              placeholder="Nama (ex: Kost)" 
-              className="flex-1 p-2 rounded border-2 border-black text-sm font-medium"
+                  type="text" 
+                  placeholder="Nama (ex: Kost)" 
+                  className="flex-1 min-w-0 p-2 rounded border-2 border-black text-sm font-medium"
               value={newFixedName}
               onChange={(e) => setNewFixedName(e.target.value)}
             />
