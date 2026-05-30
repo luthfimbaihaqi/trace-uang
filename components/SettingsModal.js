@@ -82,7 +82,7 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-sm bg-purple-100 border-2 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 relative animate-in fade-in zoom-in duration-200 my-8">
+      <div className="w-full max-w-sm bg-purple-100 border-2 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-5 relative animate-in fade-in zoom-in duration-200 my-8 overflow-hidden">
         
         <button 
           onClick={onClose}
@@ -122,7 +122,7 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
             <input 
               type="number" 
               placeholder="Rp..." 
-              className="w-24 p-2 rounded border-2 border-black text-sm font-medium"
+              className="w-20 p-2 rounded border-2 border-black text-sm font-medium"
               value={newIncomeAmount}
               onChange={(e) => setNewIncomeAmount(e.target.value)}
             />
@@ -146,7 +146,7 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
                   <span className="text-sm font-bold">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-mono text-green-600">{formatRp(item.amount)}</span>
+                  <span className="text-xs font-mono text-green-600">{formatRp(item.amount)}</span>
                   <button onClick={() => removeIncomeItem(item.id)} className="text-red-500 hover:bg-red-100 rounded p-1">
                     <Trash2 size={14} />
                   </button>
@@ -176,7 +176,7 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
             <input 
               type="number" 
               placeholder="Rp..." 
-              className="w-24 p-2 rounded border-2 border-black text-sm font-medium"
+              className="w-20 p-2 rounded border-2 border-black text-sm font-medium"
               value={newFixedAmount}
               onChange={(e) => setNewFixedAmount(e.target.value)}
             />
@@ -200,7 +200,7 @@ export default function SettingsModal({ isOpen, onClose, currentIncome, currentF
                   <span className="text-sm font-bold">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-mono">{formatRp(item.amount)}</span>
+                  <span className="text-xs font-mono">{formatRp(item.amount)}</span>
                   <button onClick={() => removeFixedItem(item.id)} className="text-red-500 hover:bg-red-100 rounded p-1">
                     <Trash2 size={14} />
                   </button>
