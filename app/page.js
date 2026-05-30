@@ -1,29 +1,27 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { useBudget } from '../context/BudgetContext';
-// Update Import Icon: Tambah Loader2 untuk loading screen
-import { Wallet, Utensils, Sparkles, Bus, Ticket, Home, Package, History, Trash2, Settings, Calculator, Loader2 } from 'lucide-react';
+import { Wallet, Utensils, Sparkles, Bus, Ticket, Home, Package, History, Trash2, Settings, Loader2, TrendingDown, Receipt, Target, ArrowRight } from 'lucide-react';
 import ExpenseModal from '../components/ExpenseModal';
 import SettingsModal from '../components/SettingsModal';
-import InfoModal from '../components/InfoModal'; 
 import DeleteModal from '../components/DeleteModal';
-import CalculatorModal from '../components/CalculatorModal';
 
 export default function HomePage() {
-  // Ambil isLoading dan saveSettings dari Context baru
   const { 
-    totalBudget, fixedExpenses, currentBalance, idealBalance, netBudget, totalFixed, status, 
-    addExpense, monthlyExpenses, deleteExpense, resetData, 
-    isLoading, saveSettings, logout // <--- Tambahan dari Context Supabase
+    totalBudget, netBudget, totalFixed,
+    incomeSources, fixedExpenses,
+    currentBalance, totalSpent,
+    categoryBreakdown, monthlyTarget,
+    status,
+    addExpense, monthlyExpenses, deleteExpense, resetData,
+    isLoading, saveSettings, logout
   } = useBudget();
   
   const [activeCategory, setActiveCategory] = useState(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null); 
-  const [mounted, setMounted] = useState(false);
   const [toast, setToast] = useState(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -36,13 +34,13 @@ export default function HomePage() {
       case "PANTAU": return { bg: "bg-yellow-200", text: "Hmmmmmm 😐", desc: "Hati-hati ya, jangan boros.", img: "/moods/pantau.png" };
       case "PANIK": return { bg: "bg-orange-300", text: "Noooo Mimi! 😱", desc: "Jangan banyak jajan, Sayang", img: "/moods/panik.png" };
       case "JEBOL": return { bg: "bg-red-300", text: "Uang Mimi Abiiiis! 😭", desc: "Kamu beli apa aja sayang??", img: "/moods/jebol.png" };
+      case "SETUP": return { bg: "bg-gray-200", text: "Hai Mimi! 👋", desc: "Atur pemasukan kamu dulu ya", img: "/moods/aman.png" };
       default: return { bg: "bg-gray-200", text: "Loading...", img: "" };
     }
   };
 
   const mood = getMoodConfig(status);
 
-  // --- MENU GRID (Teks Tetap) ---
   const menus = [
     { name: "Makan", icon: <Utensils size={24}/>, color: "bg-orange-200" }, 
     { name: "Skincare", icon: <Sparkles size={24}/>, color: "bg-pink-200" }, 
@@ -52,11 +50,23 @@ export default function HomePage() {
     { name: "Online Shopping", icon: <Package size={24}/>, color: "bg-gray-200" }, 
   ];
 
+  const getCategoryColor = (cat) => {
+    const map = {
+      "Makan": "bg-orange-300",
+      "Skincare": "bg-pink-300",
+      "Transport": "bg-blue-300",
+      "Entertainment": "bg-purple-300",
+      "Operasional Kost": "bg-green-300",
+      "Online Shopping": "bg-gray-300",
+    };
+    return map[cat] || "bg-gray-300";
+  };
+
   const handleSaveExpense = (data) => {
     addExpense(data);
     setActiveCategory(null);
     setToast("Tersimpan! ✅");
-  setTimeout(() => setToast(null), 2000);
+    setTimeout(() => setToast(null), 2000);
   };
 
   const handleClickDelete = (item) => {
@@ -68,17 +78,12 @@ export default function HomePage() {
       deleteExpense(itemToDelete.id);
       setItemToDelete(null);
       setToast("Dihapus! 🗑️");
-    setTimeout(() => setToast(null), 2000);
+      setTimeout(() => setToast(null), 2000);
     }
   };
 
-  const handleIdealHelp = () => {
-    setIsInfoOpen(true);
-  };
-
-  // UPDATE: Panggil saveSettings (Supabase) bukan set state manual
-  const handleSaveSettings = (newBudget, newFixed) => {
-    saveSettings(newBudget, newFixed);
+  const handleSaveSettings = (newIncome, newFixed, newTarget) => {
+    saveSettings(newIncome, newFixed, newTarget);
   };
 
   const groupExpensesByDate = (items) => {
@@ -104,13 +109,13 @@ export default function HomePage() {
     return groups;
   };
 
-  // TAMPILAN LOADING (Wajib ada karena ambil data dari internet)
+  // LOADING SCREEN
   if (!mounted || isLoading) {
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50 gap-4">
-            <Loader2 size={48} className="animate-spin text-black" />
-            <p className="font-bold animate-pulse text-sm">Lagi ngambil catatan Mimi...</p>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50 gap-4">
+        <Loader2 size={48} className="animate-spin text-black" />
+        <p className="font-bold animate-pulse text-sm">Lagi ngambil catatan Mimi...</p>
+      </div>
     );
   }
 
@@ -129,22 +134,12 @@ export default function HomePage() {
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        
-        <div className="flex gap-2">
-            <button 
-                onClick={() => setIsCalculatorOpen(true)} 
-                className="w-10 h-10 bg-white border-2 border-black rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-            >
-                <Calculator size={20} />
-            </button>
-
-            <button 
-                onClick={() => setIsSettingsOpen(true)} 
-                className="w-10 h-10 bg-white border-2 border-black rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-            >
-                <Settings size={20} />
-            </button>
-        </div>
+        <button 
+          onClick={() => setIsSettingsOpen(true)} 
+          className="w-10 h-10 bg-white border-2 border-black rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+        >
+          <Settings size={20} />
+        </button>
       </header>
 
       {/* Mood Board */}
@@ -153,25 +148,83 @@ export default function HomePage() {
         <div>
           <h2 className="text-xl font-black">{mood.text}</h2>
           <p className="text-sm font-medium leading-tight">{mood.desc}</p>
+          {status === "SETUP" && (
+            <button 
+              onClick={() => setIsSettingsOpen(true)} 
+              className="mt-2 text-xs font-bold bg-black text-white px-3 py-1.5 rounded-full flex items-center gap-1 active:scale-95 transition-transform"
+            >
+              Setup Sekarang <ArrowRight size={12}/>
+            </button>
+          )}
         </div>
       </div>
 
       {/* Summary Card */}
       <div className="bg-white border-2 border-black p-6 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-2 bg-black"></div>
-        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Sisa Uang Mimi</p>
+        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-1">Sisa Uang Jajan</p>
         <h3 className={`text-4xl font-black tracking-tighter ${currentBalance < 0 ? 'text-red-500' : 'text-black'}`}>
           {formatRp(currentBalance)}
         </h3>
-        <div className="mt-4 flex justify-center gap-2">
-           <button 
-             onClick={handleIdealHelp}
-             className="text-xs font-bold bg-gray-100 px-2 py-1 border border-black rounded hover:bg-yellow-200 active:scale-95 transition-all cursor-help"
-           >
-             Idealnya Sisa: {formatRp(idealBalance)} <span className="text-gray-400 ml-1">?</span>
-           </button>
-        </div>
+        <p className="text-xs text-gray-400 font-medium mt-1">
+          dari {formatRp(netBudget)} (setelah tagihan)
+        </p>
       </div>
+
+      {/* Target Progress */}
+      {monthlyTarget > 0 && (
+        <div className="bg-white border-2 border-black p-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex justify-between items-center mb-2">
+            <p className="text-xs font-bold uppercase flex items-center gap-1.5">
+              <Target size={14}/> Target Bulan Ini
+            </p>
+            <p className="text-xs font-bold text-gray-500">
+              {formatRp(totalSpent)} / {formatRp(monthlyTarget)}
+            </p>
+          </div>
+          <div className="w-full h-4 bg-gray-100 rounded-full border-2 border-black overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-500 ${
+                (totalSpent / monthlyTarget) > 1 ? 'bg-red-400' : 
+                (totalSpent / monthlyTarget) > 0.8 ? 'bg-yellow-400' : 'bg-green-400'
+              }`}
+              style={{ width: `${Math.min((totalSpent / monthlyTarget) * 100, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-center mt-1.5 font-bold text-gray-400">
+            {totalSpent <= monthlyTarget 
+              ? `${Math.round((totalSpent / monthlyTarget) * 100)}% terpakai — sisa ${formatRp(monthlyTarget - totalSpent)}`
+              : `Udah lewat ${formatRp(totalSpent - monthlyTarget)}! 😱`
+            }
+          </p>
+        </div>
+      )}
+
+      {/* Category Breakdown */}
+      {categoryBreakdown.length > 0 && (
+        <div className="bg-white border-2 border-black p-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h4 className="font-bold text-sm mb-3 flex items-center gap-2 uppercase">
+            <TrendingDown size={16}/> Kemana Aja Uangnya
+          </h4>
+          <div className="space-y-3">
+            {categoryBreakdown.map((cat) => (
+              <div key={cat.category}>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold">{cat.category}</span>
+                  <span className="text-sm font-bold text-gray-600">{formatRp(cat.amount)}</span>
+                </div>
+                <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden border border-black/20">
+                  <div 
+                    className={`h-full ${getCategoryColor(cat.category)} rounded-full transition-all duration-500`} 
+                    style={{ width: `${cat.percentage}%` }}
+                  />
+                </div>
+                <p className="text-[10px] font-bold text-gray-400 mt-0.5 text-right">{cat.percentage}%</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Menu Grid */}
       <div>
@@ -191,6 +244,27 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* Tagihan Tetap Section */}
+      {fixedExpenses.length > 0 && (
+        <div className="bg-purple-50 border-2 border-black p-4 rounded-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <h4 className="font-bold text-sm mb-3 flex items-center gap-2 uppercase">
+            <Receipt size={16}/> Tagihan Tetap Bulan Ini
+          </h4>
+          <div className="space-y-2">
+            {fixedExpenses.map(item => (
+              <div key={item.id} className="flex justify-between items-center bg-white p-2.5 rounded-lg border border-black/30">
+                <span className="text-sm font-bold">{item.name}</span>
+                <span className="text-sm font-bold text-purple-600">{formatRp(item.amount)}</span>
+              </div>
+            ))}
+            <div className="flex justify-between items-center pt-2 border-t-2 border-black/10 mt-2">
+              <span className="text-xs font-bold text-gray-500 uppercase">Total Tagihan</span>
+              <span className="text-sm font-black">{formatRp(totalFixed)}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Riwayat Pengeluaran */}
       <div>
@@ -258,18 +332,12 @@ export default function HomePage() {
       <SettingsModal 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        currentBudget={totalBudget}
+        currentIncome={incomeSources}
         currentFixed={fixedExpenses} 
+        currentTarget={monthlyTarget}
         onSave={handleSaveSettings}
         onReset={resetData}
         onLogout={logout}
-      />
-
-      <InfoModal 
-        isOpen={isInfoOpen}
-        onClose={() => setIsInfoOpen(false)}
-        totalBudget={netBudget}
-        totalFixed={totalFixed}
       />
 
       <DeleteModal 
@@ -277,12 +345,6 @@ export default function HomePage() {
         onClose={() => setItemToDelete(null)}
         onConfirm={confirmDelete}
         item={itemToDelete || {}}
-      />
-
-      <CalculatorModal 
-        isOpen={isCalculatorOpen}
-        onClose={() => setIsCalculatorOpen(false)}
-        netBudget={netBudget} 
       />
 
     </div>

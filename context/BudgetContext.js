@@ -1,6 +1,6 @@
 "use client"
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient'; // Import Supabase Client
+import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 
 const BudgetContext = createContext();
@@ -9,70 +9,68 @@ export const BudgetProvider = ({ children }) => {
   const router = useRouter();
   
   // --- STATE ---
-  const [user, setUser] = useState(null); // Data User yang Login
-  const [totalBudget, setTotalBudget] = useState(0); 
+  const [user, setUser] = useState(null);
+  const [incomeSources, setIncomeSources] = useState([]);
   const [fixedExpenses, setFixedExpenses] = useState([]);
   const [expenses, setExpenses] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Loading awal
+  const [monthlyTarget, setMonthlyTarget] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 1. CEK USER & LOAD DATA
   useEffect(() => {
     const checkUser = async () => {
-      // Ambil session user saat ini
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (!session) {
-        // Kalau gak ada user login, tendang ke halaman login
         router.push('/login');
         return;
       }
-
       setUser(session.user);
       fetchData(session.user.id);
     };
 
     checkUser();
 
-    // Listener kalau user tiba-tiba logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-  if (!session) router.push('/login');
-  else {
-    setUser(session.user);
-    fetchData(session.user.id); // <--- ini yang kurang
-  }
-});
+      if (!session) router.push('/login');
+      else {
+        setUser(session.user);
+        fetchData(session.user.id);
+      }
+    });
 
     return () => subscription.unsubscribe();
   }, [router]);
 
-  // 2. FUNGSI AMBIL DATA DARI SUPABASE
+  // 2. AMBIL DATA DARI SUPABASE
   const fetchData = async (userId) => {
     setIsLoading(true);
     try {
-      // A. Ambil Expenses
+      // A. Income Sources
+      const { data: incData } = await supabase
+        .from('income_sources')
+        .select('*');
+      if (incData) setIncomeSources(incData);
+
+      // B. Expenses
       const { data: expData } = await supabase
         .from('expenses')
         .select('*')
-        .order('date', { ascending: false }); // Urutkan dari yang terbaru
-      
+        .order('date', { ascending: false });
       if (expData) setExpenses(expData);
 
-      // B. Ambil Fixed Expenses
+      // C. Fixed Expenses
       const { data: fixData } = await supabase
         .from('fixed_expenses')
         .select('*');
-      
       if (fixData) setFixedExpenses(fixData);
 
-      // C. Ambil User Settings (Budget)
-      const { data: settingsData } = await supabase
+      // D. Settings
+      const { data: settData } = await supabase
         .from('user_settings')
-        .select('total_budget')
+        .select('monthly_target')
         .single();
-      
-      // Default 3jt kalau belum di-set
-      if (settingsData) setTotalBudget(settingsData.total_budget);
-      else setTotalBudget(3000000);
+      if (settData) setMonthlyTarget(settData.monthly_target || 0);
+      else setMonthlyTarget(0);
 
     } catch (error) {
       console.error("Error loading data:", error);
@@ -81,49 +79,67 @@ export const BudgetProvider = ({ children }) => {
     }
   };
 
-  // --- LOGIC PERHITUNGAN (SAMA SEPERTI SEBELUMNYA) ---
+  // --- PERHITUNGAN ---
   const today = new Date();
   const currentMonth = today.getMonth();
   const currentYear = today.getFullYear();
   const currentDay = today.getDate();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  // Filter Client-Side untuk Tampilan Dashboard (Bulan Ini)
+  // Total pemasukan dari semua sumber
+  const totalBudget = incomeSources.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalFixed = fixedExpenses.reduce((acc, curr) => acc + curr.amount, 0);
+  const netBudget = totalBudget - totalFixed; // Uang jajan bersih
+
+  // Filter pengeluaran bulan ini
   const monthlyExpenses = expenses.filter(item => {
-    const itemDate = new Date(item.date);
-    return itemDate.getMonth() === currentMonth && itemDate.getFullYear() === currentYear;
+    const d = new Date(item.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
   const totalSpent = monthlyExpenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const currentBalance = totalBudget - totalSpent;
-  const totalFixed = fixedExpenses.reduce((acc, curr) => acc + curr.amount, 0);
-  const netBudget = totalBudget - totalFixed;
+  const currentBalance = netBudget - totalSpent;
   const remainingDays = daysInMonth - currentDay + 1;
-  
-  // Cegah error NaN
-  const safeNetBudget = netBudget || 0;
-  const idealBalance = Math.round((safeNetBudget * (remainingDays / daysInMonth)) + totalFixed);
 
+  // Ideal balance (prorated sisa hari)
+  const safeNetBudget = netBudget || 0;
+  const idealBalance = Math.round(safeNetBudget * (remainingDays / daysInMonth));
+
+  // Category breakdown
+  const categoryBreakdown = (() => {
+    const grouped = {};
+    monthlyExpenses.forEach(e => {
+      grouped[e.category] = (grouped[e.category] || 0) + e.amount;
+    });
+    return Object.entries(grouped)
+      .map(([category, amount]) => ({
+        category,
+        amount,
+        percentage: totalSpent ? Math.round((amount / totalSpent) * 100) : 0
+      }))
+      .sort((a, b) => b.amount - a.amount);
+  })();
+
+  // Mood system
   const diff = currentBalance - idealBalance;
   let status = "AMAN";
-  if (currentBalance < 0) status = "JEBOL";
+  if (totalBudget === 0) status = "SETUP";
+  else if (currentBalance < 0) status = "JEBOL";
   else if (diff > 200000) status = "KAYA";
   else if (diff >= 0) status = "AMAN";
   else if (diff > -500000) status = "PANTAU";
   else status = "PANIK";
 
-  // --- ACTIONS (CRUD KE SUPABASE) ---
+  // --- ACTIONS ---
 
-  // A. Tambah Pengeluaran
+  // Tambah Pengeluaran
   const addExpense = async (newExpense) => {
     if (!user) return;
     
-    // Optimistic Update (Biar UI cepet)
     const tempId = Date.now();
-    const optimisticExpense = { ...newExpense, id: tempId, user_id: user.id };
-    setExpenses([optimisticExpense, ...expenses]);
+    const optimistic = { ...newExpense, id: tempId, user_id: user.id };
+    setExpenses([optimistic, ...expenses]);
 
-    // Kirim ke Server
     const { data, error } = await supabase
       .from('expenses')
       .insert([{ 
@@ -137,18 +153,15 @@ export const BudgetProvider = ({ children }) => {
       .single();
 
     if (error) {
-      alert("Gagal simpan data: " + error.message);
-      // Rollback kalau gagal (hapus yg temp tadi)
+      alert("Gagal simpan: " + error.message);
       setExpenses(prev => prev.filter(e => e.id !== tempId));
     } else {
-      // Replace ID sementara dengan ID asli dari Supabase
       setExpenses(prev => prev.map(e => e.id === tempId ? data : e));
     }
   };
 
-  // B. Hapus Pengeluaran
+  // Hapus Pengeluaran
   const deleteExpense = async (id) => {
-    // Optimistic Update
     const backup = [...expenses];
     setExpenses(expenses.filter(e => e.id !== id));
 
@@ -159,62 +172,70 @@ export const BudgetProvider = ({ children }) => {
 
     if (error) {
       alert("Gagal hapus: " + error.message);
-      setExpenses(backup); // Balikin data
+      setExpenses(backup);
     }
   };
 
-  // C. Save Settings (Budget & Fixed)
-  const saveSettings = async (newBudget, newFixedList) => {
+  // Save Settings (Income + Fixed + Target)
+  const saveSettings = async (newIncome, newFixed, newTarget) => {
     if (!user) return;
-    
-    // 1. Update Budget (Upsert: Update kalau ada, Insert kalau belum)
-    const { error: budgetError } = await supabase
-      .from('user_settings')
-      .upsert({ user_id: user.id, total_budget: newBudget });
 
-    if (budgetError) {
-      alert("Gagal update budget");
-      return;
-    }
-    setTotalBudget(newBudget);
-
-    // 2. Update Fixed Expenses (Strategi: Hapus Semua -> Tulis Ulang)
-    // Ini cara paling gampang untuk sinkronisasi list
-    
-    // a. Hapus yg lama
-    await supabase.from('fixed_expenses').delete().eq('user_id', user.id);
-    
-    // b. Insert yg baru (kalau ada)
-    if (newFixedList.length > 0) {
-        const formattedFixed = newFixedList.map(item => ({
-            user_id: user.id,
-            name: item.name,
-            amount: item.amount
-        }));
-        
-        const { data, error: fixedError } = await supabase
-            .from('fixed_expenses')
-            .insert(formattedFixed)
-            .select();
-            
-        if (!fixedError) setFixedExpenses(data);
+    // 1. Income Sources: hapus semua, tulis ulang
+    await supabase.from('income_sources').delete().eq('user_id', user.id);
+    if (newIncome.length > 0) {
+      const formatted = newIncome.map(i => ({
+        user_id: user.id,
+        name: i.name,
+        amount: i.amount
+      }));
+      const { data, error } = await supabase
+        .from('income_sources')
+        .insert(formatted)
+        .select();
+      if (!error && data) setIncomeSources(data);
     } else {
-        setFixedExpenses([]);
+      setIncomeSources([]);
     }
+
+    // 2. Fixed Expenses: hapus semua, tulis ulang
+    await supabase.from('fixed_expenses').delete().eq('user_id', user.id);
+    if (newFixed.length > 0) {
+      const formatted = newFixed.map(i => ({
+        user_id: user.id,
+        name: i.name,
+        amount: i.amount
+      }));
+      const { data, error } = await supabase
+        .from('fixed_expenses')
+        .insert(formatted)
+        .select();
+      if (!error && data) setFixedExpenses(data);
+    } else {
+      setFixedExpenses([]);
+    }
+
+    // 3. Monthly Target
+    const { error: targetError } = await supabase
+      .from('user_settings')
+      .upsert({ user_id: user.id, monthly_target: newTarget || 0 });
+    
+    if (!targetError) setMonthlyTarget(newTarget || 0);
   };
 
-  // D. Reset Data / Logout
+  // Reset Data
   const resetData = async () => {
-    if (!confirm("Ini akan menghapus SELURUH history belanja kamu selamanya di server. Yakin?")) return;
+    if (!confirm("Yakin mau hapus SEMUA data (History, Tagihan, Pemasukan)?")) return;
     
     await supabase.from('expenses').delete().eq('user_id', user.id);
     await supabase.from('fixed_expenses').delete().eq('user_id', user.id);
-    // Budget gak usah direset biar gak repot setting ulang
+    await supabase.from('income_sources').delete().eq('user_id', user.id);
     
     setExpenses([]);
     setFixedExpenses([]);
+    setIncomeSources([]);
   };
 
+  // Logout
   const logout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
@@ -222,26 +243,15 @@ export const BudgetProvider = ({ children }) => {
 
   return (
     <BudgetContext.Provider value={{ 
-      user,
-      isLoading,
-      totalBudget, 
-      fixedExpenses,
-      expenses,        
-      monthlyExpenses, 
-      totalSpent, 
-      currentBalance, 
-      idealBalance,
-      netBudget,
-      totalFixed,
+      user, isLoading,
+      totalBudget, netBudget, totalFixed,
+      incomeSources, fixedExpenses,
+      expenses, monthlyExpenses,
+      totalSpent, currentBalance, idealBalance,
+      categoryBreakdown, monthlyTarget,
       status,
-      // Function yg di-export disesuaikan nama barunya
-      setTotalBudget: (val) => setTotalBudget(val), // Placeholder, aslinya pakai saveSettings
-      setFixedExpenses: (val) => setFixedExpenses(val), // Placeholder
-      saveSettings, // <--- FUNGSI UTAMA BARU BUAT SETTINGS
-      addExpense,
-      deleteExpense,
-      resetData,
-      logout // <--- Tambahan Logout
+      addExpense, deleteExpense,
+      saveSettings, resetData, logout
     }}>
       {children}
     </BudgetContext.Provider>

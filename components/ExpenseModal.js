@@ -6,34 +6,38 @@ export default function ExpenseModal({ isOpen, onClose, category, onSave }) {
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
 
-  // Kalau modal ga open, jangan render apa-apa
   if (!isOpen) return null;
+
+  const quickAmounts = [10000, 15000, 20000, 25000, 50000, 100000];
+
+  const handleQuickAdd = (val) => {
+    setAmount(String(val));
+  };
+
+  const formatQuick = (num) => {
+    if (num >= 1000) return (num / 1000) + 'rb';
+    return num;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!amount) return; // Validasi sederhana
+    if (!amount) return;
 
-    // Kirim data ke parent (page.js)
     onSave({
       category: category.name,
       amount: parseInt(amount),
       note: note,
-      date: new Date().toISOString(), // Simpan waktu input
+      date: new Date().toISOString(),
     });
 
-    // Reset form
     setAmount('');
     setNote('');
   };
 
   return (
-    // Overlay Hitam Transparan
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-      
-      {/* Container Modal */}
       <div className={`w-full max-w-sm ${category.color} border-2 border-black rounded-xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-6 relative animate-in fade-in zoom-in duration-200`}>
         
-        {/* Tombol Close (X) */}
         <button 
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 bg-white border-2 border-black rounded-full flex items-center justify-center hover:bg-gray-100 active:scale-90 transition-transform"
@@ -41,7 +45,7 @@ export default function ExpenseModal({ isOpen, onClose, category, onSave }) {
           <X size={20} />
         </button>
 
-        {/* Judul Modal */}
+        {/* Header */}
         <div className="flex flex-col items-center mb-6">
           <div className="w-16 h-16 bg-white border-2 border-black rounded-full flex items-center justify-center mb-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {category.icon}
@@ -51,9 +55,29 @@ export default function ExpenseModal({ isOpen, onClose, category, onSave }) {
           </h2>
         </div>
 
-        {/* Form Input */}
         <form onSubmit={handleSubmit} className="space-y-4">
           
+          {/* Quick Add Buttons */}
+          <div>
+            <label className="block text-xs font-bold mb-2 ml-1 uppercase">Pilih Cepat</label>
+            <div className="grid grid-cols-3 gap-2">
+              {quickAmounts.map((val) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => handleQuickAdd(val)}
+                  className={`py-2 px-3 rounded-lg border-2 border-black text-sm font-bold transition-all active:scale-95
+                    ${parseInt(amount) === val 
+                      ? 'bg-black text-white shadow-none translate-x-[1px] translate-y-[1px]' 
+                      : 'bg-white hover:bg-gray-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
+                    }`}
+                >
+                  {formatQuick(val)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Input Nominal */}
           <div>
             <label className="block text-sm font-bold mb-1 ml-1">Nominal (Rp)</label>
@@ -61,9 +85,8 @@ export default function ExpenseModal({ isOpen, onClose, category, onSave }) {
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0"
+              placeholder="Atau ketik sendiri..."
               className="w-full text-2xl font-black p-3 rounded-lg border-2 border-black focus:outline-none focus:ring-4 focus:ring-black/20"
-              autoFocus
               required
             />
           </div>
