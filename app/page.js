@@ -32,9 +32,9 @@ export default function HomePage() {
       case "KAYA": return { bg: "bg-green-200", text: "Uang Mimi Masih Banyak! 🤑", desc: "Masih aman nih buat jajan", img: "/moods/kaya.png" };
       case "AMAN": return { bg: "bg-blue-200", text: "Aman kok 😎", desc: "Masih on track, pertahankan!", img: "/moods/aman.png" };
       case "PANTAU": return { bg: "bg-yellow-200", text: "Hmmmmmm 😐", desc: "Hati-hati ya, jangan boros.", img: "/moods/pantau.png" };
-      case "PANIK": return { bg: "bg-orange-300", text: "Noooo Mimi! 😱", desc: "Jangan banyak jajan, Sayang", img: "/moods/panik.png" };
-      case "JEBOL": return { bg: "bg-red-300", text: "Uang Mimi Abiiiis! 😭", desc: "Kamu beli apa aja sayang??", img: "/moods/jebol.png" };
-      case "SETUP": return { bg: "bg-gray-200", text: "Hai Mimi! 👋", desc: "Atur pemasukan kamu dulu ya", img: "/moods/aman.png" };
+      case "PANIK": return { bg: "bg-orange-300", text: "Noooo Mimi! 😱", desc: "Jangan banyak jajan, Mimiii", img: "/moods/panik.png" };
+      case "JEBOL": return { bg: "bg-red-300", text: "Uang Mimi Abiiiis! 😭", desc: "Kamu beli apa aja Mimiiiii??", img: "/moods/jebol.png" };
+      case "SETUP": return { bg: "bg-gray-200", text: "Hai Mimi! 👋", desc: "Atur pemasukan mimi dulu ya", img: "/moods/aman.png" };
       default: return { bg: "bg-gray-200", text: "Loading...", img: "" };
     }
   };
