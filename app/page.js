@@ -14,7 +14,7 @@ export default function HomePage() {
   const { 
     totalBudget, fixedExpenses, currentBalance, idealBalance, netBudget, totalFixed, status, 
     addExpense, monthlyExpenses, deleteExpense, resetData, 
-    isLoading, saveSettings // <--- Tambahan dari Context Supabase
+    isLoading, saveSettings, logout // <--- Tambahan dari Context Supabase
   } = useBudget();
   
   const [activeCategory, setActiveCategory] = useState(null);
@@ -23,6 +23,7 @@ export default function HomePage() {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null); 
   const [mounted, setMounted] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => setMounted(true), []);
 
@@ -54,6 +55,8 @@ export default function HomePage() {
   const handleSaveExpense = (data) => {
     addExpense(data);
     setActiveCategory(null);
+    setToast("Tersimpan! ✅");
+  setTimeout(() => setToast(null), 2000);
   };
 
   const handleClickDelete = (item) => {
@@ -64,6 +67,8 @@ export default function HomePage() {
     if (itemToDelete) {
       deleteExpense(itemToDelete.id);
       setItemToDelete(null);
+      setToast("Dihapus! 🗑️");
+    setTimeout(() => setToast(null), 2000);
     }
   };
 
@@ -235,6 +240,13 @@ export default function HomePage() {
         )}
       </div>
 
+      {/* TOAST */}
+      {toast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-black text-white px-6 py-3 rounded-full font-bold text-sm border-2 border-white shadow-lg animate-in fade-in slide-in-from-bottom-4 duration-300 z-50">
+          {toast}
+        </div>
+      )}
+
       {/* MODALS */}
       <ExpenseModal 
         isOpen={!!activeCategory}
@@ -250,6 +262,7 @@ export default function HomePage() {
         currentFixed={fixedExpenses} 
         onSave={handleSaveSettings}
         onReset={resetData}
+        onLogout={logout}
       />
 
       <InfoModal 

@@ -35,9 +35,12 @@ export const BudgetProvider = ({ children }) => {
 
     // Listener kalau user tiba-tiba logout
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) router.push('/login');
-      else setUser(session.user);
-    });
+  if (!session) router.push('/login');
+  else {
+    setUser(session.user);
+    fetchData(session.user.id); // <--- ini yang kurang
+  }
+});
 
     return () => subscription.unsubscribe();
   }, [router]);

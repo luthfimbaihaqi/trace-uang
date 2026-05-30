@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Trash2, Settings, Plus, Receipt } from 'lucide-react';
 
-export default function SettingsModal({ isOpen, onClose, currentBudget, currentFixed, onSave, onReset }) {
+export default function SettingsModal({ isOpen, onClose, currentBudget, currentFixed, onSave, onReset, onLogout }) {
   // Gunakan local state untuk editing
   const [localBudget, setLocalBudget] = useState('');
   const [localFixed, setLocalFixed] = useState([]);
@@ -168,6 +168,14 @@ export default function SettingsModal({ isOpen, onClose, currentBudget, currentF
             >
                 <Trash2 size={12} /> RESET SEMUA DATA
             </button>
+
+            <button 
+                onClick={onLogout}
+                className="mt-3 text-gray-400 text-xs font-bold hover:underline flex items-center justify-center gap-1 w-full"
+            >
+                Logout
+            </button>
+
         </div>
 
       </div>

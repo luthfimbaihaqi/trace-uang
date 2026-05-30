@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false); // Mode Login atau Daftar
+  const [toast, setToast] = useState(null);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -22,10 +23,11 @@ export default function LoginPage() {
         password,
       });
       if (error) {
-        alert("Gagal daftar: " + error.message);
+        setToast("Gagal daftar: " + error.message);
+setTimeout(() => setToast(null), 3000);
       } else {
-        alert("Hore! Akun jadi. Langsung login otomatis ya...");
-        // Bikin default settings buat user baru
+        setToast("Hore! Akun jadi 🎉");
+setTimeout(() => setToast(null), 3000);
         if(data.user) {
             await supabase.from('user_settings').insert([{ user_id: data.user.id, total_budget: 3000000 }]);
         }
@@ -38,7 +40,8 @@ export default function LoginPage() {
         password,
       });
       if (error) {
-        alert("Eits, email atau password salah nih! 🤔");
+       setToast("Email atau password salah nih! 🤔");
+setTimeout(() => setToast(null), 3000);
       } else {
         router.push('/'); // Pindah ke Home
       }
@@ -128,6 +131,18 @@ export default function LoginPage() {
         </div>
 
       </div>
+
+      {/* TOAST */}
+      {toast && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full font-bold text-sm border-2 shadow-lg z-50 animate-in fade-in slide-in-from-top-4 duration-300
+          ${toast.includes("salah") || toast.includes("Gagal") 
+            ? "bg-red-500 text-white border-red-800" 
+            : "bg-black text-white border-white"
+          }`}
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

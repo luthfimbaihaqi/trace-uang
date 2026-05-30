@@ -35,7 +35,7 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, item }) {
             <div className="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
             
             <p className="text-gray-500 text-xs font-bold uppercase mb-1">Item yang dihapus:</p>
-            <h3 className="text-lg font-black">{item?.name}</h3>
+            <h3 className="text-lg font-black">{item?.category}</h3>
             <p className="text-red-600 font-bold text-xl mt-1">Rp {item?.amount?.toLocaleString('id-ID')}</p>
         </div>
 
